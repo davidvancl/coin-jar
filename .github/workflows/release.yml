@@ -1,0 +1,12 @@
+name: Release firmware
+
+on:
+  push:
+    branches: [main]
+    paths: [platformio.ini]
+
+jobs:
+  release:
+    uses: davidvancl/esp-ota-updater/.github/workflows/release.yml@v1
+    permissions:
+      contents: write
