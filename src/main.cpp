@@ -3,6 +3,7 @@
 #include "config.h"
 #include "Led.h"
 #include "Sound.h"
+#include "CoinSensor.h"
 #include "WifiCredentials.h"
 
 Adafruit_NeoPixel& leds = Led::strip;
@@ -25,46 +26,26 @@ void setup() {
   OtaUpdater::run(WIFI_CREDENTIALS);
 
   Led::stopPulse();
+  leds.clear(); leds.show();
 
   Sound::begin();
   Sound::setVolume(2000);   // tiše; klidně zkus 1000–6000
 
-  Serial.println("\n=== Test LED + zvuk ===");
+  // Když závora nefunguje (malý rozdíl IR vyp/zap), 3x bliknou LEDky červeně
+  if (!CoinSensor::begin()) {
+    for (int i = 0; i < 3; i++) {
+      allColor(80, 0, 0); delay(300);
+      leds.clear(); leds.show(); delay(300);
+    }
+  }
 }
 
 void loop() {
-  // --- LED ---
-  Serial.println("Test 1: LED 1 az 5 postupne (bila)");
-  for (int i = 0; i < LED_COUNT; i++) {
-    leds.clear();
-    leds.setPixelColor(i, leds.Color(255, 255, 255));
-    leds.show();
-    Serial.printf("  svitit ma LED %d\n", i + 1);
-    delay(700);
+  if (CoinSensor::update()) {
+    Serial.printf(">>> MINCE! (#%d)  hodnota %d / klid %d\n",
+                  CoinSensor::count(), CoinSensor::value(), CoinSensor::baseline());
+    allColor(255, 160, 0);          // zlatý záblesk po dobu zvuku
+    Sound::chime(true, true);
+    leds.clear(); leds.show();
   }
-
-  Serial.println("Test 2: barvy");
-  Serial.println("  CERVENA");  allColor(255, 0, 0);   delay(1500);
-  Serial.println("  ZELENA");   allColor(0, 255, 0);   delay(1500);
-  Serial.println("  MODRA");    allColor(0, 0, 255);   delay(1500);
-
-  Serial.println("Test 3: duha");
-  for (long hue = 0; hue < 65536L * 2; hue += 512) {
-    for (int i = 0; i < LED_COUNT; i++)
-      leds.setPixelColor(i, leds.gamma32(leds.ColorHSV(hue + i * 65536L / LED_COUNT)));
-    leds.show();
-    delay(10);
-  }
-  leds.clear();
-  leds.show();
-
-  // --- Zvuk ---
-  Serial.println("Test 4: zvuk");
-  Serial.println("  cink: LEVY");   allColor(40, 0, 0);  Sound::chime(true,  false); delay(800);
-  Serial.println("  cink: PRAVY");  allColor(0, 0, 40);  Sound::chime(false, true);  delay(800);
-  Serial.println("  cink: OBA");    allColor(0, 40, 0);  Sound::chime(true,  true);
-
-  leds.clear();
-  leds.show();
-  delay(3000);
 }
