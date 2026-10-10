@@ -6,6 +6,8 @@ Firmware for a coin jar with lights and sound, running on an ESP32. An infrared 
 
 *The finished jar and the electronics in its top part.*
 
+The 3D printed jar is on [Printables](https://www.printables.com/model/1869046-smart-coin-jar-with-sound-rgb-lights-esp32).
+
 ## Hardware
 
 - ESP32 DevKit (`esp32dev`)
