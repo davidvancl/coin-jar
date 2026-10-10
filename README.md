@@ -39,7 +39,7 @@ On startup the LEDs pulse orange while the device connects to WiFi and checks fo
 | WiFi connection and update check | pulsing orange | – |
 | Light barrier does not work | 3 red blinks | – |
 | Coin dropped in | gold while the chime plays | chime from both speakers (0.6 s) |
-| Pairing with the Android app | pulsing blue until a coin is dropped in | – |
+| Pairing with the Android app | a sequence of 4 colors blinking repeatedly | – |
 
 A coin is detected when the phototransistor value drops below 60 % of the idle value. The barrier is armed again once the value is back above 80 %. The idle value slowly follows changes of ambient light. The sensor is sampled about 2000 times per second.
 
@@ -61,7 +61,7 @@ The chime is two mixed tones (1320 Hz and 1760 Hz) with a short fade-out, genera
 
 ## Android app
 
-The jar can be controlled from the [esp-control-app](https://github.com/davidvancl/esp-control-app) over the local WiFi network, using the [esp-device-control](https://github.com/davidvancl/esp-device-control) library. The app shows the coin count, can reset it, change the volume and play the chime. To pair a phone, start pairing in the app and drop a coin into the jar while the LEDs pulse blue. The exposed values are listed in the library's [DESIGN.md](https://github.com/davidvancl/esp-device-control/blob/main/DESIGN.md#coin-jar).
+The jar can be controlled from the [esp-control-app](https://github.com/davidvancl/esp-control-app) over the local WiFi network, using the [esp-device-control](https://github.com/davidvancl/esp-device-control) library. The app shows the coin count, can reset it, change the volume and play the chime. To pair a phone, start pairing in the app: the LEDs blink a sequence of 4 colors (red, green, blue, yellow, purple) over and over, tap the same colors in the same order in the app. The exposed values are listed in the library's [DESIGN.md](https://github.com/davidvancl/esp-device-control/blob/main/DESIGN.md#coin-jar).
 
 ## WiFi
 

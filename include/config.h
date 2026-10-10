@@ -10,3 +10,8 @@
 
 #define PULSE_PERIOD_MS 1500
 #define PULSE_FRAME_MS  20
+
+#define SEQUENCE_ON_MS    600
+#define SEQUENCE_OFF_MS   250
+#define SEQUENCE_PAUSE_MS 1500
+#define SEQUENCE_MAX      8

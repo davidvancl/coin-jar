@@ -9,5 +9,7 @@ extern Adafruit_NeoPixel strip;
 void begin();
 void startPulse(uint8_t r, uint8_t g, uint8_t b);
 void stopPulse();
+void startSequence(const uint32_t* colors, int count);
+void stopSequence();
 
 }
