@@ -15,5 +15,6 @@
 namespace Sound {
   void begin();
   void setVolume(uint16_t volume);           // 0–32767, výchozí 2000 (tiše)
+  uint16_t getVolume();
   void chime(bool left = true, bool right = true);  // krátké jemné "cink"
 }

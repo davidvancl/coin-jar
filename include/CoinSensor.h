@@ -15,4 +15,5 @@ namespace CoinSensor {
   int  value();          // poslední naměřená hodnota (0–4095)
   int  baseline();       // klidová hodnota (paprsek nepřerušen)
   int  count();          // počet detekovaných mincí od startu
+  void setCount(int value);
 }

@@ -66,5 +66,6 @@ bool update() {
 int value()    { return lastVal; }
 int baseline() { return (int)base; }
 int count()    { return coins; }
+void setCount(int value) { coins = value; }
 
 } // namespace CoinSensor

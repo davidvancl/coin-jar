@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <DeviceControl.h>
 #include <OtaUpdater.h>
 #include "config.h"
 #include "Led.h"
@@ -8,9 +9,48 @@
 
 Adafruit_NeoPixel& leds = Led::strip;
 
+static bool barrierOk = false;
+static bool pairing = false;
+
 void allColor(uint8_t r, uint8_t g, uint8_t b) {
   for (int i = 0; i < LED_COUNT; i++) leds.setPixelColor(i, leds.Color(r, g, b));
   leds.show();
+}
+
+static void celebrate() {
+  allColor(255, 160, 0);
+  Sound::chime(true, true);
+  leds.clear(); leds.show();
+}
+
+static DeviceControl::Setter number(int min, int max, std::function<void(int)> apply) {
+  return [min, max, apply](JsonVariantConst value) {
+    if (!value.is<int>()) return false;
+    int n = value.as<int>();
+    if (n < min || n > max) return false;
+    apply(n);
+    return true;
+  };
+}
+
+static void setupControl() {
+  DeviceControl::begin("Coin Jar", "coin-jar");
+
+  DeviceControl::get<int>("coins", CoinSensor::count);
+  DeviceControl::set("coins", number(0, 1000000, CoinSensor::setCount));
+  DeviceControl::get<int>("volume", [] { return (int)Sound::getVolume(); });
+  DeviceControl::set("volume", number(0, 32767, [](int v) { Sound::setVolume(v); }));
+  DeviceControl::set("chime", [](JsonVariantConst) {
+    celebrate();
+    return true;
+  });
+  DeviceControl::get<bool>("barrier", [] { return barrierOk; });
+  DeviceControl::get<int>("sensor", CoinSensor::value);
+  DeviceControl::get<int>("baseline", CoinSensor::baseline);
+
+  DeviceControl::pairWithConfirm(
+    [] { pairing = true; Led::startPulse(0, 0, 255); },
+    [] { pairing = false; Led::stopPulse(); });
 }
 
 void setup() {
@@ -29,23 +69,27 @@ void setup() {
   leds.clear(); leds.show();
 
   Sound::begin();
-  Sound::setVolume(2000);   // tiše; klidně zkus 1000–6000
+  Sound::setVolume(2000);
 
-  // Když závora nefunguje (malý rozdíl IR vyp/zap), 3x bliknou LEDky červeně
-  if (!CoinSensor::begin()) {
+  barrierOk = CoinSensor::begin();
+  if (!barrierOk) {
     for (int i = 0; i < 3; i++) {
       allColor(80, 0, 0); delay(300);
       leds.clear(); leds.show(); delay(300);
     }
   }
+
+  setupControl();
 }
 
 void loop() {
+  DeviceControl::loop();
+
   if (CoinSensor::update()) {
     Serial.printf(">>> MINCE! (#%d)  hodnota %d / klid %d\n",
                   CoinSensor::count(), CoinSensor::value(), CoinSensor::baseline());
-    allColor(255, 160, 0);          // zlatý záblesk po dobu zvuku
-    Sound::chime(true, true);
-    leds.clear(); leds.show();
+    DeviceControl::notify("coins");
+    if (pairing) DeviceControl::confirmPairing();
+    celebrate();
   }
 }

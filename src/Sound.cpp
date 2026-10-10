@@ -36,6 +36,8 @@ void begin() {
 
 void setVolume(uint16_t v) { volume = min<uint16_t>(v, 32767); }
 
+uint16_t getVolume() { return volume; }
+
 void chime(bool left, bool right) {
   if (SWAP_LR) { bool t = left; left = right; right = t; }
   const int frames = SAMPLE_RATE * 0.6f;   // 0,6 s

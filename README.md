@@ -39,6 +39,7 @@ On startup the LEDs pulse orange while the device connects to WiFi and checks fo
 | WiFi connection and update check | pulsing orange | – |
 | Light barrier does not work | 3 red blinks | – |
 | Coin dropped in | gold while the chime plays | chime from both speakers (0.6 s) |
+| Pairing with the Android app | pulsing blue until a coin is dropped in | – |
 
 A coin is detected when the phototransistor value drops below 60 % of the idle value. The barrier is armed again once the value is back above 80 %. The idle value slowly follows changes of ambient light. The sensor is sampled about 2000 times per second.
 
@@ -57,6 +58,10 @@ At startup the firmware measures the phototransistor with the IR LED off and on 
 ## Sound
 
 The chime is two mixed tones (1320 Hz and 1760 Hz) with a short fade-out, generated directly in the firmware. Volume is set in [src/main.cpp](src/main.cpp) with `Sound::setVolume()`, the range is 0 to 32767 and the default 2000 is quiet (1000 to 6000 is a sensible range). If the left and right speakers are swapped, set `SWAP_LR` in [src/Sound.cpp](src/Sound.cpp) to `true`.
+
+## Android app
+
+The jar can be controlled from the [esp-control-app](https://github.com/davidvancl/esp-control-app) over the local WiFi network, using the [esp-device-control](https://github.com/davidvancl/esp-device-control) library. The app shows the coin count, can reset it, change the volume and play the chime. To pair a phone, start pairing in the app and drop a coin into the jar while the LEDs pulse blue. The exposed values are listed in the library's [DESIGN.md](https://github.com/davidvancl/esp-device-control/blob/main/DESIGN.md#coin-jar).
 
 ## WiFi
 
@@ -85,7 +90,7 @@ The firmware prints its version, the result of the update check and the light ba
 
 ## Source layout
 
-- `src/main.cpp` – `setup()` and `loop()`, reaction to a coin
+- `src/main.cpp` – `setup()` and `loop()`, reaction to a coin, values exposed to the Android app
 - `src/Led.cpp` – WS2811 LEDs and the orange pulsing during startup
 - `src/CoinSensor.cpp` – IR light barrier, calibration and coin detection
 - `src/Sound.cpp` – I2S output and the chime
