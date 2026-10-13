@@ -14,6 +14,10 @@ static volatile bool sequencing = false;
 static uint32_t sequence[SEQUENCE_MAX];
 static int sequenceLength = 0;
 
+static bool lightOn = false;
+static uint32_t lightColors[LED_COUNT];
+static uint8_t brightnessLevel = LED_BRIGHTNESS;
+
 static void fill(uint32_t color) {
   for (int i = 0; i < LED_COUNT; i++) strip.setPixelColor(i, color);
   strip.show();
@@ -53,10 +57,50 @@ static void sequenceLoop(void*) {
 }
 
 void begin() {
+  for (int i = 0; i < LED_COUNT; i++) lightColors[i] = LIGHT_COLOR;
   strip.begin();
-  strip.setBrightness(LED_BRIGHTNESS);
+  strip.setBrightness(brightnessLevel);
   strip.clear();
   strip.show();
+}
+
+void restore() {
+  if (pulseTask || sequenceTask) return;
+  if (lightOn) {
+    for (int i = 0; i < LED_COUNT; i++) strip.setPixelColor(i, lightColors[i]);
+  } else {
+    strip.clear();
+  }
+  strip.show();
+}
+
+void setLight(bool on) {
+  lightOn = on;
+  restore();
+}
+
+bool light() {
+  return lightOn;
+}
+
+void setLightColor(int index, uint32_t color) {
+  if (index < 0 || index >= LED_COUNT) return;
+  lightColors[index] = color & 0xFFFFFF;
+  restore();
+}
+
+uint32_t lightColor(int index) {
+  return index >= 0 && index < LED_COUNT ? lightColors[index] : 0;
+}
+
+void setBrightness(uint8_t value) {
+  brightnessLevel = value;
+  strip.setBrightness(brightnessLevel);
+  restore();
+}
+
+uint8_t brightness() {
+  return brightnessLevel;
 }
 
 void startPulse(uint8_t r, uint8_t g, uint8_t b) {
@@ -71,8 +115,7 @@ void startPulse(uint8_t r, uint8_t g, uint8_t b) {
 void stopPulse() {
   pulsing = false;
   while (pulseTask) delay(PULSE_FRAME_MS);
-  strip.clear();
-  strip.show();
+  restore();
 }
 
 void startSequence(const uint32_t* colors, int count) {
@@ -86,8 +129,7 @@ void startSequence(const uint32_t* colors, int count) {
 void stopSequence() {
   sequencing = false;
   while (sequenceTask) delay(PULSE_FRAME_MS);
-  strip.clear();
-  strip.show();
+  restore();
 }
 
 }

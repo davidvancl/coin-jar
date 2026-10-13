@@ -3,6 +3,8 @@
 #define LED_PIN   33
 #define LED_COUNT 5
 #define LED_BRIGHTNESS 80
+#define LIGHT_COLOR    0xFFA040
+#define FLASH_COLOR    0xFFA000
 
 #define BOOT_R 255
 #define BOOT_G 90

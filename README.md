@@ -38,12 +38,13 @@ On startup the LEDs pulse orange while the device connects to WiFi and checks fo
 |---|---|---|
 | WiFi connection and update check | pulsing orange | – |
 | Light barrier does not work | 3 red blinks | – |
-| Coin dropped in | gold while the chime plays | chime from both speakers (0.6 s) |
+| Coin dropped in | gold (color can be changed in the app) while the chime plays | chime from both speakers (0.6 s) |
+| Permanent light switched on in the app | each LED in its own color, brightness adjustable; effects above return to it when they end | – |
 | Pairing with the Android app | a sequence of 4 colors blinking repeatedly | – |
 
 A coin is detected when the phototransistor value drops below 60 % of the idle value. The barrier is armed again once the value is back above 80 %. The idle value slowly follows changes of ambient light. The sensor is sampled about 2000 times per second.
 
-Each coin is also logged to the serial monitor with the coin count, the measured value and the idle value.
+Each coin is also logged to the serial monitor with the coin count, the measured value and the idle value. The count is saved to NVS (`Preferences`, namespace `coinjar`) after every coin and loaded at startup, so it is kept across reboots and firmware updates.
 
 ## Light barrier calibration
 
@@ -65,7 +66,7 @@ The Android app can stream music to the jar: 16-bit mono PCM at 22050 Hz over Wi
 
 ## Android app
 
-The jar can be controlled from the [esp-control-app](https://github.com/davidvancl/esp-control-app) over the local WiFi network, using the [esp-device-control](https://github.com/davidvancl/esp-device-control) library. The app shows the coin count, can reset it, change the volume, play the chime and stream music from the phone. To pair a phone, start pairing in the app: the LEDs blink a sequence of 4 colors (red, green, blue, yellow, purple) over and over, tap the same colors in the same order in the app. The exposed values are listed in the library's [DESIGN.md](https://github.com/davidvancl/esp-device-control/blob/main/DESIGN.md#coin-jar).
+The jar can be controlled from the [esp-control-app](https://github.com/davidvancl/esp-control-app) over the local WiFi network, using the [esp-device-control](https://github.com/davidvancl/esp-device-control) library. The app shows the coin count, can reset it, change the volume, play the chime, stream music from the phone, switch on a permanent light with a color per LED, and change the LED brightness and the coin flash color. The coin count is stored in NVS and survives reboots, power loss and OTA updates; the light, volume and other settings are not stored and reset on reboot. To pair a phone, start pairing in the app: the LEDs blink a sequence of 4 colors (red, green, blue, yellow, purple) over and over, tap the same colors in the same order in the app. The exposed values are listed in the library's [DESIGN.md](https://github.com/davidvancl/esp-device-control/blob/main/DESIGN.md#coin-jar).
 
 ## WiFi
 
@@ -95,8 +96,8 @@ The firmware prints its version, the result of the update check and the light ba
 ## Source layout
 
 - `src/main.cpp` – `setup()` and `loop()`, reaction to a coin, values exposed to the Android app
-- `src/Led.cpp` – WS2811 LEDs and the orange pulsing during startup
-- `src/CoinSensor.cpp` – IR light barrier, calibration and coin detection
+- `src/Led.cpp` – WS2811 LEDs: startup pulsing, pairing color sequence, permanent light and brightness
+- `src/CoinSensor.cpp` – IR light barrier, calibration, coin detection and the stored coin count
 - `src/Sound.cpp` – I2S output, the chime and the music stream from the app
 - `include/config.h` – LED pin, count, brightness and pulsing
 - `include/WifiCredentials.h` – uses `secrets.h` if it exists

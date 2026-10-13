@@ -17,20 +17,57 @@ static const uint32_t FLASH_MS = 300;
 
 static bool barrierOk = false;
 static uint32_t lastMusicReport = 0;
+static uint32_t flashColor = FLASH_COLOR;
 
 void allColor(uint8_t r, uint8_t g, uint8_t b) {
   for (int i = 0; i < LED_COUNT; i++) leds.setPixelColor(i, leds.Color(r, g, b));
   leds.show();
 }
 
+static void fillColor(uint32_t color) {
+  for (int i = 0; i < LED_COUNT; i++) leds.setPixelColor(i, color);
+  leds.show();
+}
+
+static bool parseColor(JsonVariantConst value, uint32_t& out) {
+  const char* text = value.as<const char*>();
+  if (!text || strlen(text) != 7 || text[0] != '#') return false;
+  for (int i = 1; i < 7; i++) {
+    if (!isxdigit((unsigned char)text[i])) return false;
+  }
+  out = strtoul(text + 1, nullptr, 16);
+  return true;
+}
+
+static String colorText(uint32_t color) {
+  char text[8];
+  snprintf(text, sizeof(text), "#%06X", (unsigned)(color & 0xFFFFFF));
+  return String(text);
+}
+
+static bool setLightColors(JsonVariantConst value) {
+  uint32_t colors[LED_COUNT];
+  if (parseColor(value, colors[0])) {
+    for (int i = 1; i < LED_COUNT; i++) colors[i] = colors[0];
+  } else {
+    JsonArrayConst list = value.as<JsonArrayConst>();
+    if (list.isNull() || list.size() != LED_COUNT) return false;
+    for (int i = 0; i < LED_COUNT; i++) {
+      if (!parseColor(list[i], colors[i])) return false;
+    }
+  }
+  for (int i = 0; i < LED_COUNT; i++) Led::setLightColor(i, colors[i]);
+  return true;
+}
+
 static void celebrate() {
-  allColor(255, 160, 0);
+  fillColor(flashColor);
   if (Sound::streaming()) {
     delay(FLASH_MS);
   } else {
     Sound::chime(true, true);
   }
-  leds.clear(); leds.show();
+  Led::restore();
 }
 
 static void setMusic(bool on) {
@@ -88,6 +125,17 @@ static void setupControl() {
   DeviceControl::set<bool>("music", setMusic);
   DeviceControl::get<int>("musicBuffer", Sound::bufferedMs);
   DeviceControl::onData(Sound::streamWrite);
+  DeviceControl::get<bool>("light", Led::light);
+  DeviceControl::set<bool>("light", Led::setLight);
+  DeviceControl::get("lightColors", [](JsonVariant out) {
+    JsonArray colors = out.to<JsonArray>();
+    for (int i = 0; i < LED_COUNT; i++) colors.add(colorText(Led::lightColor(i)));
+  });
+  DeviceControl::set("lightColors", setLightColors);
+  DeviceControl::get<int>("brightness", [] { return (int)Led::brightness(); });
+  DeviceControl::set("brightness", number(1, 255, [](int v) { Led::setBrightness(v); }));
+  DeviceControl::get("flashColor", [](JsonVariant out) { out.set(colorText(flashColor)); });
+  DeviceControl::set("flashColor", [](JsonVariantConst value) { return parseColor(value, flashColor); });
   DeviceControl::get<bool>("barrier", [] { return barrierOk; });
   DeviceControl::get<int>("sensor", CoinSensor::value);
   DeviceControl::get<int>("baseline", CoinSensor::baseline);
@@ -109,7 +157,6 @@ void setup() {
   OtaUpdater::run(WIFI_CREDENTIALS);
 
   Led::stopPulse();
-  leds.clear(); leds.show();
 
   Sound::begin();
   Sound::setVolume(2000);

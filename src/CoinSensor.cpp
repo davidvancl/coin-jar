@@ -1,4 +1,5 @@
 #include "CoinSensor.h"
+#include <Preferences.h>
 
 namespace {
   const float DROP_RATIO  = 0.60f;   // mince = pokles pod 60 % klidové hodnoty
@@ -11,6 +12,12 @@ namespace {
   bool     blocked = false;
   uint32_t lastSample = 0;
 
+  Preferences store;
+  const char* const STORE_NAMESPACE = "coinjar";
+  const char* const STORE_COINS = "coins";
+
+  void saveCoins() { store.putInt(STORE_COINS, coins); }
+
   int readAvg(int n) {
     long s = 0;
     for (int i = 0; i < n; i++) s += analogRead(PIN_IR_SENS);
@@ -21,6 +28,10 @@ namespace {
 namespace CoinSensor {
 
 bool begin() {
+  store.begin(STORE_NAMESPACE, false);
+  coins = store.getInt(STORE_COINS, 0);
+  Serial.printf("Mince z NVS: %d\n", coins);
+
   pinMode(PIN_IR_LED, OUTPUT);
   analogReadResolution(12);
   analogSetPinAttenuation(PIN_IR_SENS, ADC_11db);
@@ -55,6 +66,7 @@ bool update() {
   if (!blocked && v < base * DROP_RATIO) {
     blocked = true;
     coins++;
+    saveCoins();
     coin = true;
   } else if (blocked && v > base * REARM_RATIO) {
     blocked = false;
@@ -66,6 +78,9 @@ bool update() {
 int value()    { return lastVal; }
 int baseline() { return (int)base; }
 int count()    { return coins; }
-void setCount(int value) { coins = value; }
+void setCount(int value) {
+  coins = value;
+  saveCoins();
+}
 
 } // namespace CoinSensor
