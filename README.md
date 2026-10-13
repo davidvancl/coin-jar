@@ -8,6 +8,9 @@ Firmware for a coin jar with lights and sound, running on an ESP32. An infrared 
 
 The 3D printed jar is on [Printables](https://www.printables.com/model/1869046-smart-coin-jar-with-sound-rgb-lights-esp32).
 
+> [!TIP]
+> **Control it from your phone.** The jar works with the Android app [esp-control-app](https://github.com/davidvancl/esp-control-app): coin count, LED light and colors, volume and music streamed from the phone. Download the APK from its [releases](https://github.com/davidvancl/esp-control-app/releases/latest), see [Android app](#android-app) below.
+
 ## Hardware
 
 - ESP32 DevKit (`esp32dev`)
@@ -66,7 +69,27 @@ The Android app can stream music to the jar: 16-bit mono PCM at 22050 Hz over Wi
 
 ## Android app
 
-The jar can be controlled from the [esp-control-app](https://github.com/davidvancl/esp-control-app) over the local WiFi network, using the [esp-device-control](https://github.com/davidvancl/esp-device-control) library. The app shows the coin count, can reset it, change the volume, play the chime, stream music from the phone, switch on a permanent light with a color per LED, and change the LED brightness and the coin flash color. The coin count is stored in NVS and survives reboots, power loss and OTA updates; the light, volume and other settings are not stored and reset on reboot. To pair a phone, start pairing in the app: the LEDs blink a sequence of 4 colors (red, green, blue, yellow, purple) over and over, tap the same colors in the same order in the app. The exposed values are listed in the library's [DESIGN.md](https://github.com/davidvancl/esp-device-control/blob/main/DESIGN.md#coin-jar).
+> [!NOTE]
+> App: [github.com/davidvancl/esp-control-app](https://github.com/davidvancl/esp-control-app) – the signed APK is in its [latest release](https://github.com/davidvancl/esp-control-app/releases/latest).
+> The phone and the jar must be on the same WiFi network.
+
+The jar is controlled over the local WiFi network using the [esp-device-control](https://github.com/davidvancl/esp-device-control) library. The app finds it automatically.
+
+<img src="docs/app-coins.jpg" alt="App: coin count and the light section" width="240"> <img src="docs/app-light.jpg" alt="App: permanent light, LED colors, brightness and flash color" width="240"> <img src="docs/app-sound.jpg" alt="App: volume, chime and music from the phone" width="240">
+
+*Coin count, LED light and sound in the app.*
+
+| Part | What the app can do | Stored in the jar |
+|---|---|---|
+| Coins | show the total count live, correct it, reset the counter | yes, in NVS – survives reboots, power loss and OTA updates |
+| Light | switch on a permanent light, set the color of each of the 5 LEDs, brightness, color of the coin flash | no, back to defaults after a reboot |
+| Sound | chime volume, play the chime | no |
+| Music | stream a song from the phone to the speakers, also in the background | – |
+| Diagnostics | light barrier state, current and idle value | – |
+
+**Pairing:** start pairing in the app; the LEDs blink a sequence of 4 colors (red, green, blue, yellow, purple) over and over, tap the same colors in the same order in the app.
+
+The exposed values are listed in the library's [DESIGN.md](https://github.com/davidvancl/esp-device-control/blob/main/DESIGN.md#coin-jar).
 
 ## WiFi
 
