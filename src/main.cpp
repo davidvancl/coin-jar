@@ -11,7 +11,12 @@ Adafruit_NeoPixel& leds = Led::strip;
 
 static const char* const PAIR_COLORS[] = {"#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF"};
 
+static const uint32_t MUSIC_IDLE_MS = 3000;
+static const uint32_t MUSIC_REPORT_MS = 500;
+static const uint32_t FLASH_MS = 300;
+
 static bool barrierOk = false;
+static uint32_t lastMusicReport = 0;
 
 void allColor(uint8_t r, uint8_t g, uint8_t b) {
   for (int i = 0; i < LED_COUNT; i++) leds.setPixelColor(i, leds.Color(r, g, b));
@@ -20,8 +25,33 @@ void allColor(uint8_t r, uint8_t g, uint8_t b) {
 
 static void celebrate() {
   allColor(255, 160, 0);
-  Sound::chime(true, true);
+  if (Sound::streaming()) {
+    delay(FLASH_MS);
+  } else {
+    Sound::chime(true, true);
+  }
   leds.clear(); leds.show();
+}
+
+static void setMusic(bool on) {
+  if (on) {
+    Sound::startStream();
+  } else {
+    Sound::stopStream();
+  }
+}
+
+static void maintainMusic() {
+  if (!Sound::streaming()) return;
+  if (Sound::idleMs() > MUSIC_IDLE_MS) {
+    Sound::stopStream();
+    DeviceControl::notify("music");
+    return;
+  }
+  uint32_t now = millis();
+  if (now - lastMusicReport < MUSIC_REPORT_MS) return;
+  lastMusicReport = now;
+  DeviceControl::notify("musicBuffer");
 }
 
 static DeviceControl::Setter number(int min, int max, std::function<void(int)> apply) {
@@ -54,6 +84,10 @@ static void setupControl() {
     celebrate();
     return true;
   });
+  DeviceControl::get<bool>("music", Sound::streaming);
+  DeviceControl::set<bool>("music", setMusic);
+  DeviceControl::get<int>("musicBuffer", Sound::bufferedMs);
+  DeviceControl::onData(Sound::streamWrite);
   DeviceControl::get<bool>("barrier", [] { return barrierOk; });
   DeviceControl::get<int>("sensor", CoinSensor::value);
   DeviceControl::get<int>("baseline", CoinSensor::baseline);
@@ -93,6 +127,7 @@ void setup() {
 
 void loop() {
   DeviceControl::loop();
+  maintainMusic();
 
   if (CoinSensor::update()) {
     Serial.printf(">>> MINCE! (#%d)  hodnota %d / klid %d\n",

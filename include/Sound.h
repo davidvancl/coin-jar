@@ -17,4 +17,10 @@ namespace Sound {
   void setVolume(uint16_t volume);           // 0–32767, výchozí 2000 (tiše)
   uint16_t getVolume();
   void chime(bool left = true, bool right = true);  // krátké jemné "cink"
+  bool startStream();
+  void stopStream();
+  bool streaming();
+  void streamWrite(const uint8_t* data, size_t length);
+  int bufferedMs();
+  uint32_t idleMs();
 }
